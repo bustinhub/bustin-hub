@@ -1,3 +1,26 @@
+local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+gui.Name = "BustinHubNotice"
+
+local bar = Instance.new("Frame", gui)
+bar.Size = UDim2.new(1, 0, 0, 40)
+bar.Position = UDim2.new(0, 0, 0, -40)
+bar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+bar.BorderSizePixel = 0
+
+local text = Instance.new("TextLabel", bar)
+text.Size = UDim2.new(1, 0, 1, 0)
+text.BackgroundTransparency = 1
+text.Text = "Bustin Hub Loaded"
+text.TextColor3 = Color3.new(1, 1, 1)
+text.Font = Enum.Font.GothamBold
+text.TextScaled = true
+
+game:GetService("TweenService"):Create(bar, TweenInfo.new(0.6), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+wait(2.5)
+game:GetService("TweenService"):Create(bar, TweenInfo.new(0.6), {Position = UDim2.new(0, 0, 0, -40)}):Play()
+wait(0.6)
+gui:Destroy()
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
