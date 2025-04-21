@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -221,16 +222,24 @@ local function applyESP(player)
 	end
 end
 
+local function refreshAllESP()
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= Player and p.Character then
+			applyESP(p)
+		end
+	end
+end
+
 local function updateGunESP()
 	if gunBillboard then gunBillboard:Destroy() gunBillboard = nil end
-	for _, tool in pairs(workspace:GetDescendants()) do
-		if tool:IsA("Tool") and tool.Name == "Gun" and tool.Parent == workspace then
-			local part = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
-			if part then
-				gunBillboard = Instance.new("BillboardGui", tool)
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v:IsA("Tool") and v.Name == "Gun" and v.Parent == workspace then
+			local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
+			if handle then
+				gunBillboard = Instance.new("BillboardGui", v)
 				gunBillboard.Size = UDim2.new(0, 100, 0, 30)
 				gunBillboard.AlwaysOnTop = true
-				gunBillboard.Adornee = part
+				gunBillboard.Adornee = handle
 				local label = Instance.new("TextLabel", gunBillboard)
 				label.Size = UDim2.new(1, 0, 1, 0)
 				label.BackgroundTransparency = 1
@@ -243,6 +252,13 @@ local function updateGunESP()
 		end
 	end
 end
+
+workspace.DescendantAdded:Connect(function(obj)
+	if gunESPEnabled and obj:IsA("Tool") and obj.Name == "Gun" then
+		task.wait(0.25)
+		updateGunESP()
+	end
+end)
 
 local function resetAll()
 	for _, v in pairs(ESPFolder:GetChildren()) do v:Destroy() end
@@ -269,21 +285,7 @@ end
 
 RunService.RenderStepped:Connect(function()
 	if workspace:FindFirstChild("Lobby") then sheriffName = nil end
-	if espEnabled then
-		for _, p in ipairs(Players:GetPlayers()) do
-			if p ~= Player then
-				applyESP(p)
-			end
-		end
-	else
-		resetAll()
-	end
-	if gunESPEnabled then
-		updateGunESP()
-	elseif gunBillboard and gunBillboard.Parent then
-		gunBillboard:Destroy()
-		gunBillboard = nil
-	end
+	if espEnabled then refreshAllESP() else resetAll() end
 end)
 
 espToggle.MouseButton1Click:Connect(function() espEnabled = not espEnabled end)
