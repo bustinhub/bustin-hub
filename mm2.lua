@@ -122,36 +122,38 @@ end
 
 pages[1].Visible = true
 
-local espToggle = Instance.new("TextButton", pages[1])
-espToggle.Size = UDim2.new(1, -10, 0, 32)
-espToggle.Text = "Toggle ESP"
-espToggle.TextColor3 = Color3.new(1, 1, 1)
-espToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-espToggle.Font = Enum.Font.Gotham
-espToggle.TextSize = 16
-Instance.new("UICorner", espToggle).CornerRadius = UDim.new(0, 6)
+local function createToggleButton(text, parent, callback)
+	local button = Instance.new("TextButton", parent)
+	button.Size = UDim2.new(1, -10, 0, 32)
+	button.Text = text .. " [OFF]"
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	button.Font = Enum.Font.Gotham
+	button.TextSize = 16
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+	local state = false
+	button.MouseButton1Click:Connect(function()
+		state = not state
+		button.Text = text .. (state and " [ON]" or " [OFF]")
+		callback(state)
+	end)
+	return button
+end
 
-local gunToggle = Instance.new("TextButton", pages[1])
-gunToggle.Size = UDim2.new(1, -10, 0, 32)
-gunToggle.Text = "Toggle Gun ESP"
-gunToggle.TextColor3 = Color3.new(1, 1, 1)
-gunToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-gunToggle.Font = Enum.Font.Gotham
-gunToggle.TextSize = 16
-Instance.new("UICorner", gunToggle).CornerRadius = UDim.new(0, 6)
+createToggleButton("ESP", pages[1], function(on) espEnabled = on end)
+createToggleButton("Gun ESP", pages[1], function(on) gunESPEnabled = on end)
+createToggleButton("Show Roles", pages[1], function(on) showRolesEnabled = on end)
 
-local roleToggle = Instance.new("TextButton", pages[1])
-roleToggle.Size = UDim2.new(1, -10, 0, 32)
-roleToggle.Text = "Toggle Show Roles"
-roleToggle.TextColor3 = Color3.new(1, 1, 1)
-roleToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-roleToggle.Font = Enum.Font.Gotham
-roleToggle.TextSize = 16
-Instance.new("UICorner", roleToggle).CornerRadius = UDim.new(0, 6)
-
-local function getRealRole(player)
-	local r = trueRoles[player]
-	if r then return r end
+local function getRole(player)
+	local backpack = player:FindFirstChild("Backpack")
+	local char = player.Character
+	if char and char:FindFirstChild("Knife") or backpack and backpack:FindFirstChild("Knife") then
+		return "Murderer"
+	elseif char and char:FindFirstChild("Gun") or backpack and backpack:FindFirstChild("Gun") then
+		if trueRoles[player] == "Murderer" then return "Murderer" end
+		if trueRoles[player] == "Sheriff" then return "Sheriff" end
+		return "Hero"
+	end
 	return "Innocent"
 end
 
@@ -172,19 +174,14 @@ local function updateLabel(player)
 		text.TextScaled = true
 		createdLabels[player] = label
 	end
-	local role = getRealRole(player)
+	local role = getRole(player)
 	local t = label:FindFirstChildOfClass("TextLabel")
 	if t then
 		t.Text = role
-		if role == "Murderer" then
-			t.TextColor3 = Color3.fromRGB(255, 0, 0)
-		elseif role == "Sheriff" then
-			t.TextColor3 = Color3.fromRGB(0, 125, 255)
-		elseif role == "Hero" then
-			t.TextColor3 = Color3.fromRGB(255, 255, 0)
-		else
-			t.TextColor3 = Color3.fromRGB(0, 255, 0)
-		end
+		if role == "Murderer" then t.TextColor3 = Color3.fromRGB(255, 0, 0)
+		elseif role == "Sheriff" then t.TextColor3 = Color3.fromRGB(0, 125, 255)
+		elseif role == "Hero" then t.TextColor3 = Color3.fromRGB(255, 255, 0)
+		else t.TextColor3 = Color3.fromRGB(0, 255, 0) end
 	end
 end
 
@@ -200,34 +197,31 @@ local function applyESP(player)
 		h.Parent = ESPFolder
 		createdESP[player] = h
 	end
-	local role = getRealRole(player)
-	if role == "Murderer" then
-		createdESP[player].FillColor = Color3.fromRGB(255, 0, 0)
-	elseif role == "Sheriff" then
-		createdESP[player].FillColor = Color3.fromRGB(0, 125, 255)
-	elseif role == "Hero" then
-		createdESP[player].FillColor = Color3.fromRGB(255, 255, 0)
-	else
-		createdESP[player].FillColor = Color3.fromRGB(0, 255, 0)
-	end
+	local role = getRole(player)
+	if role == "Murderer" then createdESP[player].FillColor = Color3.fromRGB(255, 0, 0)
+	elseif role == "Sheriff" then createdESP[player].FillColor = Color3.fromRGB(0, 125, 255)
+	elseif role == "Hero" then createdESP[player].FillColor = Color3.fromRGB(255, 255, 0)
+	else createdESP[player].FillColor = Color3.fromRGB(0, 255, 0) end
 	if showRolesEnabled then updateLabel(player) end
 end
 
-local function refreshAll()
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= Player then
-			applyESP(p)
+local function detectTrueRoles()
+	for _, v in pairs(Players:GetPlayers()) do
+		if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Knife") then
+			trueRoles[v] = "Murderer"
+		elseif v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Gun") then
+			trueRoles[v] = "Sheriff"
 		end
 	end
 end
 
 local function updateGunESP()
 	if gunBillboard then gunBillboard:Destroy() gunBillboard = nil end
-	for _, tool in pairs(workspace:GetDescendants()) do
-		if tool:IsA("Tool") and tool.Name == "Gun" and tool.Parent == workspace then
-			local part = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("Tool") and v.Name == "Gun" and v.Parent == workspace then
+			local part = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
 			if part then
-				gunBillboard = Instance.new("BillboardGui", tool)
+				gunBillboard = Instance.new("BillboardGui", v)
 				gunBillboard.Size = UDim2.new(0, 100, 0, 30)
 				gunBillboard.AlwaysOnTop = true
 				gunBillboard.Adornee = part
@@ -265,27 +259,16 @@ for _, p in ipairs(Players:GetPlayers()) do
 			if espEnabled then applyESP(p) end
 		end)
 	end
-end
-
-local function detectRoles()
-	trueRoles = {}
-	for _, v in pairs(Players:GetPlayers()) do
-		if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Knife") then
-			trueRoles[v] = "Murderer"
-		elseif v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Gun") then
-			trueRoles[v] = "Sheriff"
-		elseif v.Character and v.Character:FindFirstChild("Gun") then
-			trueRoles[v] = "Hero"
-		else
-			trueRoles[v] = "Innocent"
-		end
-	end
-end
+end)
 
 RunService.RenderStepped:Connect(function()
 	if espEnabled then
-		detectRoles()
-		refreshAll()
+		detectTrueRoles()
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= Player then
+				applyESP(p)
+			end
+		end
 	else
 		for _, v in pairs(ESPFolder:GetChildren()) do v:Destroy() end
 		createdESP = {}
@@ -293,10 +276,6 @@ RunService.RenderStepped:Connect(function()
 	end
 	if gunESPEnabled then updateGunESP() end
 end)
-
-espToggle.MouseButton1Click:Connect(function() espEnabled = not espEnabled end)
-gunToggle.MouseButton1Click:Connect(function() gunESPEnabled = not gunESPEnabled end)
-roleToggle.MouseButton1Click:Connect(function() showRolesEnabled = not showRolesEnabled end)
 
 gui.Enabled = true
 main.Visible = true
