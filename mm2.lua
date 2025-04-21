@@ -208,6 +208,7 @@ local function applyESP(player)
 		h.Parent = ESPFolder
 		createdESP[player] = h
 	end
+	if showRolesEnabled then updateLabel(player) end
 	local role = getRole(player)
 	if role == "Murderer" then
 		createdESP[player].FillColor = Color3.fromRGB(255, 0, 0)
@@ -218,27 +219,18 @@ local function applyESP(player)
 	else
 		createdESP[player].FillColor = Color3.fromRGB(0, 255, 0)
 	end
-	if showRolesEnabled then
-		updateLabel(player)
-	elseif createdLabels[player] then
-		createdLabels[player]:Destroy()
-		createdLabels[player] = nil
-	end
 end
 
 local function updateGunESP()
-	if gunBillboard and gunBillboard.Parent then
-		gunBillboard:Destroy()
-		gunBillboard = nil
-	end
-	for _, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("Tool") and v.Name == "Gun" and v.Parent == workspace then
-			local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
-			if handle then
-				gunBillboard = Instance.new("BillboardGui", v)
+	if gunBillboard then gunBillboard:Destroy() gunBillboard = nil end
+	for _, tool in pairs(workspace:GetDescendants()) do
+		if tool:IsA("Tool") and tool.Name == "Gun" and tool.Parent == workspace then
+			local part = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
+			if part then
+				gunBillboard = Instance.new("BillboardGui", tool)
 				gunBillboard.Size = UDim2.new(0, 100, 0, 30)
 				gunBillboard.AlwaysOnTop = true
-				gunBillboard.Adornee = handle
+				gunBillboard.Adornee = part
 				local label = Instance.new("TextLabel", gunBillboard)
 				label.Size = UDim2.new(1, 0, 1, 0)
 				label.BackgroundTransparency = 1
@@ -259,6 +251,13 @@ local function resetAll()
 	sheriffName = nil
 end
 
+Players.PlayerAdded:Connect(function(p)
+	p.CharacterAdded:Connect(function()
+		task.wait(1)
+		if espEnabled then applyESP(p) end
+	end)
+end)
+
 for _, p in ipairs(Players:GetPlayers()) do
 	if p ~= Player then
 		p.CharacterAdded:Connect(function()
@@ -267,13 +266,6 @@ for _, p in ipairs(Players:GetPlayers()) do
 		end)
 	end
 end
-
-Players.PlayerAdded:Connect(function(p)
-	p.CharacterAdded:Connect(function()
-		task.wait(1)
-		if espEnabled then applyESP(p) end
-	end)
-end)
 
 RunService.RenderStepped:Connect(function()
 	if workspace:FindFirstChild("Lobby") then sheriffName = nil end
