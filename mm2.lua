@@ -139,10 +139,9 @@ local function createToggleButton(text, parent, callback)
 	return button
 end
 
-createToggleButton("ESP", pages[1], function(on) espEnabled = on; end)
-createToggleButton("Gun ESP", pages[1], function(on) gunESPEnabled = on; end)
-createToggleButton("Show Roles", pages[1], function(on) showRolesEnabled = on; end)
-
+createToggleButton("ESP", pages[1], function(on) espEnabled = on end)
+createToggleButton("Gun ESP", pages[1], function(on) gunESPEnabled = on end)
+createToggleButton("Show Roles", pages[1], function(on) showRolesEnabled = on end)
 local function getRole(player)
 	local bp = player:FindFirstChild("Backpack")
 	local char = player.Character
@@ -155,6 +154,7 @@ local function getRole(player)
 	end
 	return "Innocent"
 end
+
 local function updateLabel(player)
 	if not player.Character or not player.Character:FindFirstChild("Head") then return end
 	local label = createdLabels[player]
@@ -204,10 +204,12 @@ local function applyESP(player)
 end
 
 local function detectTrueRoles()
+	trueRoles = {}
 	for _, v in pairs(Players:GetPlayers()) do
-		if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Knife") then
+		local bp = v:FindFirstChild("Backpack")
+		if bp and bp:FindFirstChild("Knife") then
 			trueRoles[v] = "Murderer"
-		elseif v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Gun") then
+		elseif bp and bp:FindFirstChild("Gun") then
 			trueRoles[v] = "Sheriff"
 		end
 	end
