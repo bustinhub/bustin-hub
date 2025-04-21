@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -87,7 +88,7 @@ local espEnabled = false
 local gunESPEnabled = false
 local showRolesEnabled = false
 local gunBillboard = nil
-local sheriffName = nil
+local trueRoles = {}
 
 for _, name in ipairs(sections) do
 	local btn = Instance.new("TextButton", tabHolder)
@@ -148,19 +149,9 @@ roleToggle.Font = Enum.Font.Gotham
 roleToggle.TextSize = 16
 Instance.new("UICorner", roleToggle).CornerRadius = UDim.new(0, 6)
 
-local function getRole(player)
-	local b = player:FindFirstChild("Backpack")
-	local c = player.Character
-	if b and b:FindFirstChild("Gun") or (c and c:FindFirstChild("Gun")) then
-		if not sheriffName or sheriffName == player.Name then
-			sheriffName = player.Name
-			return "Sheriff"
-		else
-			return "Hero"
-		end
-	elseif b and b:FindFirstChild("Knife") or (c and c:FindFirstChild("Knife")) then
-		return "Murderer"
-	end
+local function getRealRole(player)
+	local r = trueRoles[player]
+	if r then return r end
 	return "Innocent"
 end
 
@@ -181,7 +172,7 @@ local function updateLabel(player)
 		text.TextScaled = true
 		createdLabels[player] = label
 	end
-	local role = getRole(player)
+	local role = getRealRole(player)
 	local t = label:FindFirstChildOfClass("TextLabel")
 	if t then
 		t.Text = role
@@ -209,8 +200,7 @@ local function applyESP(player)
 		h.Parent = ESPFolder
 		createdESP[player] = h
 	end
-	if showRolesEnabled then updateLabel(player) end
-	local role = getRole(player)
+	local role = getRealRole(player)
 	if role == "Murderer" then
 		createdESP[player].FillColor = Color3.fromRGB(255, 0, 0)
 	elseif role == "Sheriff" then
@@ -220,11 +210,12 @@ local function applyESP(player)
 	else
 		createdESP[player].FillColor = Color3.fromRGB(0, 255, 0)
 	end
+	if showRolesEnabled then updateLabel(player) end
 end
 
-local function refreshAllESP()
+local function refreshAll()
 	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= Player and p.Character then
+		if p ~= Player then
 			applyESP(p)
 		end
 	end
@@ -232,14 +223,14 @@ end
 
 local function updateGunESP()
 	if gunBillboard then gunBillboard:Destroy() gunBillboard = nil end
-	for _, v in ipairs(workspace:GetDescendants()) do
-		if v:IsA("Tool") and v.Name == "Gun" and v.Parent == workspace then
-			local handle = v:FindFirstChild("Handle") or v:FindFirstChildWhichIsA("BasePart")
-			if handle then
-				gunBillboard = Instance.new("BillboardGui", v)
+	for _, tool in pairs(workspace:GetDescendants()) do
+		if tool:IsA("Tool") and tool.Name == "Gun" and tool.Parent == workspace then
+			local part = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
+			if part then
+				gunBillboard = Instance.new("BillboardGui", tool)
 				gunBillboard.Size = UDim2.new(0, 100, 0, 30)
 				gunBillboard.AlwaysOnTop = true
-				gunBillboard.Adornee = handle
+				gunBillboard.Adornee = part
 				local label = Instance.new("TextLabel", gunBillboard)
 				label.Size = UDim2.new(1, 0, 1, 0)
 				label.BackgroundTransparency = 1
@@ -255,17 +246,10 @@ end
 
 workspace.DescendantAdded:Connect(function(obj)
 	if gunESPEnabled and obj:IsA("Tool") and obj.Name == "Gun" then
-		task.wait(0.25)
+		task.wait(0.1)
 		updateGunESP()
 	end
 end)
-
-local function resetAll()
-	for _, v in pairs(ESPFolder:GetChildren()) do v:Destroy() end
-	createdESP = {}
-	createdLabels = {}
-	sheriffName = nil
-end
 
 Players.PlayerAdded:Connect(function(p)
 	p.CharacterAdded:Connect(function()
@@ -283,9 +267,31 @@ for _, p in ipairs(Players:GetPlayers()) do
 	end
 end
 
+local function detectRoles()
+	trueRoles = {}
+	for _, v in pairs(Players:GetPlayers()) do
+		if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Knife") then
+			trueRoles[v] = "Murderer"
+		elseif v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Gun") then
+			trueRoles[v] = "Sheriff"
+		elseif v.Character and v.Character:FindFirstChild("Gun") then
+			trueRoles[v] = "Hero"
+		else
+			trueRoles[v] = "Innocent"
+		end
+	end
+end
+
 RunService.RenderStepped:Connect(function()
-	if workspace:FindFirstChild("Lobby") then sheriffName = nil end
-	if espEnabled then refreshAllESP() else resetAll() end
+	if espEnabled then
+		detectRoles()
+		refreshAll()
+	else
+		for _, v in pairs(ESPFolder:GetChildren()) do v:Destroy() end
+		createdESP = {}
+		createdLabels = {}
+	end
+	if gunESPEnabled then updateGunESP() end
 end)
 
 espToggle.MouseButton1Click:Connect(function() espEnabled = not espEnabled end)
