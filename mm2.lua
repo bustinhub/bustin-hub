@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -140,23 +139,22 @@ local function createToggleButton(text, parent, callback)
 	return button
 end
 
-createToggleButton("ESP", pages[1], function(on) espEnabled = on end)
-createToggleButton("Gun ESP", pages[1], function(on) gunESPEnabled = on end)
-createToggleButton("Show Roles", pages[1], function(on) showRolesEnabled = on end)
+createToggleButton("ESP", pages[1], function(on) espEnabled = on; end)
+createToggleButton("Gun ESP", pages[1], function(on) gunESPEnabled = on; end)
+createToggleButton("Show Roles", pages[1], function(on) showRolesEnabled = on; end)
 
 local function getRole(player)
-	local backpack = player:FindFirstChild("Backpack")
+	local bp = player:FindFirstChild("Backpack")
 	local char = player.Character
-	if char and char:FindFirstChild("Knife") or backpack and backpack:FindFirstChild("Knife") then
+	if char and char:FindFirstChild("Knife") or bp and bp:FindFirstChild("Knife") then
 		return "Murderer"
-	elseif char and char:FindFirstChild("Gun") or backpack and backpack:FindFirstChild("Gun") then
+	elseif char and char:FindFirstChild("Gun") or bp and bp:FindFirstChild("Gun") then
 		if trueRoles[player] == "Murderer" then return "Murderer" end
 		if trueRoles[player] == "Sheriff" then return "Sheriff" end
 		return "Hero"
 	end
 	return "Innocent"
 end
-
 local function updateLabel(player)
 	if not player.Character or not player.Character:FindFirstChild("Head") then return end
 	local label = createdLabels[player]
