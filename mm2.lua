@@ -57,19 +57,16 @@ local VisualStates={
 
 local function getRoleColor(p)
 	local role
-
 	local check=function(container)
 		for _,v in pairs(container:GetChildren())do
 			if v:IsA("Tool")then
-				if v.Name=="Knife"then role="Murderer" end
-				if v.Name=="Gun"then role="Sheriff" end
+				if v.Name=="Knife"then role="Murderer"end
+				if v.Name=="Gun"then role="Sheriff"end
 			end
 		end
 	end
-
-	if p:FindFirstChild("Backpack")then check(p.Backpack)end
 	if p.Character then check(p.Character)end
-
+	if p:FindFirstChild("Backpack") then check(p.Backpack)end
 	if VisualStates.AllPlayerESP then
 		if role=="Murderer"then return Color3.fromRGB(255,0,0)
 		elseif role=="Sheriff"then return Color3.fromRGB(0,0,255)
@@ -391,3 +388,4 @@ for i,name in ipairs(tabs)do
 		end)
 	end
 end
+
