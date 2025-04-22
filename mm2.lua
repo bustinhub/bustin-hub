@@ -126,6 +126,11 @@ local function makeBox(y,h)
 	return b
 end
 
+local normalSpeed = 16
+local sprintSpeed = 50
+local shiftRunning = false
+local shiftConn = nil
+
 local function showPlayerSection()
 	clearContent()
 	contentFrame.Visible=true
@@ -208,7 +213,69 @@ local function showPlayerSection()
 	end)
 	k.Parent=t
 
-	local ws=makeBox(180,110)
+	local shiftBox=makeBox(180,50)
+	local shiftLabel=Instance.new("TextLabel",shiftBox)
+	shiftLabel.Position=UDim2.new(0,10,0,6)
+	shiftLabel.Size=UDim2.new(0.6,0,0,20)
+	shiftLabel.Text="Shift to Run"
+	shiftLabel.Font=Enum.Font.GothamMedium
+	shiftLabel.TextSize=16
+	shiftLabel.TextColor3=Color3.new(1,1,1)
+	shiftLabel.BackgroundTransparency=1
+	shiftLabel.TextXAlignment=Enum.TextXAlignment.Left
+
+	local shiftDesc=Instance.new("TextLabel",shiftBox)
+	shiftDesc.Position=UDim2.new(0,10,0,34)
+	shiftDesc.Size=UDim2.new(0.8,0,0,18)
+	shiftDesc.Text="Hold Shift to move faster"
+	shiftDesc.TextColor3=Color3.fromRGB(180,180,180)
+	shiftDesc.Font=Enum.Font.Gotham
+	shiftDesc.TextSize=13
+	shiftDesc.BackgroundTransparency=1
+	shiftDesc.TextXAlignment=Enum.TextXAlignment.Left
+
+
+	local shiftToggle=Instance.new("Frame",shiftBox)
+	shiftToggle.Size=UDim2.new(0,50,0,24)
+	shiftToggle.Position=UDim2.new(1,-60,0.5,-12)
+	shiftToggle.BackgroundColor3=Color3.fromRGB(50,50,50)
+	Instance.new("UICorner",shiftToggle).CornerRadius=UDim.new(1,0)
+	local shiftKnob=Instance.new("Frame",shiftToggle)
+	shiftKnob.Size=UDim2.new(0,20,0,20)
+	shiftKnob.Position=UDim2.new(0,2,0,2)
+	shiftKnob.BackgroundColor3=Color3.fromRGB(120,120,120)
+	Instance.new("UICorner",shiftKnob).CornerRadius=UDim.new(1,0)
+	shiftKnob.Parent=shiftToggle
+
+	local shiftOn=false
+	shiftToggle.InputBegan:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.MouseButton1 then
+			shiftOn=not shiftOn
+			if shiftOn then
+				shiftKnob:TweenPosition(UDim2.new(1,-22,0,2),"Out","Quad",0.2,true)
+				shiftKnob.BackgroundColor3=Color3.fromRGB(255,255,255)
+				shiftConn=UserInputService.InputBegan:Connect(function(input)
+					if input.KeyCode==Enum.KeyCode.LeftShift then
+						local hum=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+						if hum then hum.WalkSpeed=sprintSpeed end
+					end
+				end)
+				UserInputService.InputEnded:Connect(function(input)
+					if input.KeyCode==Enum.KeyCode.LeftShift then
+						local hum=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+						if hum then hum.WalkSpeed=normalSpeed end
+					end
+				end)
+			else
+				shiftKnob:TweenPosition(UDim2.new(0,2,0,2),"Out","Quad",0.2,true)
+				shiftKnob.BackgroundColor3=Color3.fromRGB(120,120,120)
+				if shiftConn then shiftConn:Disconnect()end
+				local hum=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+				if hum then hum.WalkSpeed=normalSpeed end
+			end
+		end
+	end)
+	local ws=makeBox(240,110)
 	local wl=Instance.new("TextLabel",ws)
 	wl.Position=UDim2.new(0,10,0,8)
 	wl.Size=UDim2.new(1,-20,0,20)
@@ -223,7 +290,7 @@ local function showPlayerSection()
 	val.Size=UDim2.new(0,60,0,18)
 	val.Position=UDim2.new(1,-70,0,10)
 	val.BackgroundTransparency=1
-	val.Text="16"
+	val.Text=tostring(normalSpeed)
 	val.TextColor3=Color3.fromRGB(255,255,255)
 	val.Font=Enum.Font.Gotham
 	val.TextSize=14
@@ -252,6 +319,7 @@ local function showPlayerSection()
 			fill.Size=UDim2.new(pct,0,1,0)
 			local spd=math.floor(1+(200-1)*pct)
 			val.Text=tostring(spd)
+			normalSpeed = spd
 			local h=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid")
 			if h then h.WalkSpeed=spd end
 		end
@@ -270,6 +338,7 @@ local function showPlayerSection()
 	reset.MouseButton1Click:Connect(function()
 		val.Text="16"
 		fill.Size=UDim2.new((16-1)/(200-1),0,1,0)
+		normalSpeed = 16
 		local h=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid")
 		if h then h.WalkSpeed=16 end
 	end)
@@ -355,8 +424,8 @@ local function showVisualsSection()
 	makeToggle(200,"All Player ESP","Shows all players with role-based colors","AllPlayerESP")
 	applyESP()
 end
-local tabs={"AutoFarms","Combat","Misc","Player","Visuals","Settings"}
 
+local tabs={"AutoFarms","Combat","Misc","Player","Visuals","Settings"}
 for i,name in ipairs(tabs)do
 	local tab=Instance.new("TextButton",sidebar)
 	tab.Size=UDim2.new(1,-20,0,36)
@@ -388,4 +457,3 @@ for i,name in ipairs(tabs)do
 		end)
 	end
 end
-
