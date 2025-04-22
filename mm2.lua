@@ -55,37 +55,40 @@ local VisualStates={
 	AllPlayerESP=false
 }
 
+local function getRoleColor(p)
+	local role
+
+	local check=function(container)
+		for _,v in pairs(container:GetChildren())do
+			if v:IsA("Tool")then
+				if v.Name=="Knife"then role="Murderer" end
+				if v.Name=="Gun"then role="Sheriff" end
+			end
+		end
+	end
+
+	if p:FindFirstChild("Backpack")then check(p.Backpack)end
+	if p.Character then check(p.Character)end
+
+	if VisualStates.AllPlayerESP then
+		if role=="Murderer"then return Color3.fromRGB(255,0,0)
+		elseif role=="Sheriff"then return Color3.fromRGB(0,0,255)
+		else return Color3.fromRGB(0,255,0)end
+	end
+	if role=="Murderer" and VisualStates.MurdererESP then return Color3.fromRGB(255,0,0)end
+	if role=="Sheriff" and VisualStates.SheriffESP then return Color3.fromRGB(0,0,255)end
+	return nil
+end
+
 local function applyESP()
 	for _,p in pairs(Players:GetPlayers())do
 		if p~=Players.LocalPlayer and p.Character then
 			local h=p.Character:FindFirstChild("Highlight")
 			if h then h:Destroy()end
-
-			local color
-			local bp=p:FindFirstChild("Backpack")
-			if bp then
-				for _,item in pairs(bp:GetChildren())do
-					if item.Name=="Knife" and VisualStates.MurdererESP then
-						color=Color3.fromRGB(255,0,0)
-					elseif item.Name=="Gun" and VisualStates.SheriffESP then
-						color=Color3.fromRGB(0,0,255)
-					end
-				end
-			end
-
-			if VisualStates.AllPlayerESP and not color then
-				if bp then
-					for _,item in pairs(bp:GetChildren())do
-						if item.Name=="Knife" then color=Color3.fromRGB(255,0,0)end
-						if item.Name=="Gun" then color=Color3.fromRGB(0,0,255)end
-					end
-				end
-				if not color then color=Color3.fromRGB(0,255,0)end
-			end
-
-			if color then
+			local roleColor=getRoleColor(p)
+			if roleColor then
 				local h=Instance.new("Highlight",p.Character)
-				h.FillColor=color
+				h.FillColor=roleColor
 				h.OutlineColor=Color3.new(1,1,1)
 				h.FillTransparency=0.25
 				h.OutlineTransparency=0
@@ -93,6 +96,29 @@ local function applyESP()
 		end
 	end
 end
+
+local function refreshESP()
+	while true do
+		wait(1)
+		applyESP()
+	end
+end
+
+for _,p in pairs(Players:GetPlayers())do
+	p.CharacterAdded:Connect(function()
+		wait(0.5)
+		applyESP()
+	end)
+end
+
+Players.PlayerAdded:Connect(function(p)
+	p.CharacterAdded:Connect(function()
+		wait(0.5)
+		applyESP()
+	end)
+end)
+
+task.spawn(refreshESP)
 local function makeBox(y,h)
 	local b=Instance.new("Frame",contentFrame)
 	b.Size=UDim2.new(1,-20,0,h)
