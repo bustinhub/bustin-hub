@@ -1,3 +1,95 @@
+local REQUIRED_KEY = "bustin123"
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+local keyGui = Instance.new("ScreenGui", CoreGui)
+keyGui.Name = "BustinHub_Key"
+keyGui.IgnoreGuiInset = true
+keyGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame", keyGui)
+mainFrame.Size = UDim2.new(0, 360, 0, 220)
+mainFrame.Position = UDim2.new(0.5, -180, 0.5, -110)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+mainFrame.BackgroundTransparency = 0.15
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0,12)
+
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1,0,0,45)
+title.BackgroundTransparency = 1
+title.Text = "Bustin Hub [KEY]"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.GothamSemibold
+title.TextSize = 22
+
+local content = Instance.new("Frame", mainFrame)
+content.Size = UDim2.new(1,-20,1,-55)
+content.Position = UDim2.new(0,10,0,45)
+content.BackgroundColor3 = Color3.fromRGB(30,30,30)
+content.BackgroundTransparency = 0.1
+content.BorderSizePixel = 0
+Instance.new("UICorner", content).CornerRadius = UDim.new(0,10)
+
+local info = Instance.new("TextLabel", content)
+info.Size = UDim2.new(1,-20,0,40)
+info.Position = UDim2.new(0,10,0,10)
+info.BackgroundTransparency = 1
+info.Text = "Enter your key to unlock Bustin Hub"
+info.TextColor3 = Color3.fromRGB(200,200,200)
+info.Font = Enum.Font.Gotham
+info.TextSize = 14
+info.TextWrapped = true
+
+local keyBox = Instance.new("TextBox", content)
+keyBox.Size = UDim2.new(1,-20,0,36)
+keyBox.Position = UDim2.new(0,10,0,60)
+keyBox.PlaceholderText = "Key here..."
+keyBox.Text = ""
+keyBox.ClearTextOnFocus = false
+keyBox.Font = Enum.Font.Gotham
+keyBox.TextSize = 14
+keyBox.TextColor3 = Color3.fromRGB(255,255,255)
+keyBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0,6)
+
+local unlock = Instance.new("TextButton", content)
+unlock.Size = UDim2.new(1,-20,0,36)
+unlock.Position = UDim2.new(0,10,0,110)
+unlock.Text = "Unlock"
+unlock.Font = Enum.Font.Gotham
+unlock.TextSize = 15
+unlock.TextColor3 = Color3.fromRGB(255,255,255)
+unlock.BackgroundColor3 = Color3.fromRGB(50,50,50)
+unlock.AutoButtonColor = false
+Instance.new("UICorner", unlock).CornerRadius = UDim.new(0,6)
+
+local status = Instance.new("TextLabel", content)
+status.Size = UDim2.new(1,-20,0,20)
+status.Position = UDim2.new(0,10,0,155)
+status.BackgroundTransparency = 1
+status.Text = ""
+status.TextColor3 = Color3.fromRGB(255,80,80)
+status.Font = Enum.Font.Gotham
+status.TextSize = 13
+
+local unlocked = false
+
+unlock.MouseButton1Click:Connect(function()
+	if keyBox.Text == REQUIRED_KEY then
+		unlocked = true
+		keyGui:Destroy()
+	else
+		status.Text = "Invalid key"
+	end
+end)
+
+repeat task.wait() until unlocked
+
 local Players=game:GetService("Players")
 local CoreGui=game:GetService("CoreGui")
 local RunService=game:GetService("RunService")
