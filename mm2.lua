@@ -213,7 +213,7 @@ local function showPlayerSection()
 	end)
 	k.Parent=t
 
-	local shiftBox=makeBox(180,50)
+	local shiftBox=makeBox(180,70)
 	local shiftLabel=Instance.new("TextLabel",shiftBox)
 	shiftLabel.Position=UDim2.new(0,10,0,6)
 	shiftLabel.Size=UDim2.new(0.6,0,0,20)
