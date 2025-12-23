@@ -1,3 +1,2 @@
-this is open source, please not claim as your own, i will prefer if you use it to learn luau an scripting.
-
-:)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/bustinhub/bustin-hub/main/mm2.lua"))()
+key: bustin123
